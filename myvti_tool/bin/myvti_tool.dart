@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:prompts/prompts.dart' as prompts;
+
 import 'package:path/path.dart' as p;
+import 'package:prompts/prompts.dart' as prompts;
 
 final templateBasePath = (() {
   final currentExeDir = File(Platform.script.toFilePath()).absolute.parent;
@@ -14,13 +15,31 @@ String _promptPascalCaseName() {
   final pascalCaseRegExp = RegExp(r'^[A-Z][a-zA-Z0-9]*\$?');
 
   while (true) {
-    final input = prompts.get('📦 Nhập tên (PascalCase):').trim();
+    stdout.write('📦 Nhập tên (PascalCase): ');
+    final bytes = <int>[];
+
+    while (true) {
+      final byte = stdin.readByteSync();
+      if (byte == 10 || byte == 13) {
+        break; // Enter key (\n or \r)
+      }
+      bytes.add(byte);
+    }
+
+    final input = String.fromCharCodes(bytes).trim();
+
     if (pascalCaseRegExp.hasMatch(input)) {
       return input;
     } else {
-      print('❌ Tên phải đúng định dạng PascalCase (ví dụ: HomePage, UserProfile)');
+      print('❌ Tên phải đúng định dạng PascalCase (Ví dụ: Login)');
     }
   }
+}
+
+String _sanitizePascalCase(String input) {
+  // Chỉ giữ lại A-Z, a-z, 0-9
+  final clean = input.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+  return clean;
 }
 
 void main(List<String> arguments) async {
@@ -39,17 +58,18 @@ void main(List<String> arguments) async {
       'run',
       'build_runner',
       'build',
-      '--delete-conflicting-outputs'
+      '--delete-conflicting-outputs',
     ]);
 
-    process.stdout.transform(SystemEncoding().decoder).listen(stdout.write);
-    process.stderr.transform(SystemEncoding().decoder).listen(stderr.write);
+    process.stdout.transform(const SystemEncoding().decoder).listen(stdout.write);
+    process.stderr.transform(const SystemEncoding().decoder).listen(stderr.write);
 
-    final exitCode = await process.exitCode;
+    await process.exitCode;
     return;
   }
 
-  final name = _promptPascalCaseName();
+  final rawName = _promptPascalCaseName();
+  final name = _sanitizePascalCase(rawName);
   final snakeCase = _toSnakeCase(name);
 
   final replacements = {
@@ -83,7 +103,7 @@ void main(List<String> arguments) async {
       replacements: replacements,
     );
 
-    updateRouterFile('${name}', snakeCase, 'lib/presentation/router/router.dart');
+    updateRouterFile(name, snakeCase, 'lib/presentation/router/router.dart');
   } else if (generate == 'UseCase') {
     generateFromTemplate(
       templateName: 'usecase.dart',
@@ -158,13 +178,13 @@ void updateRouterFile(String className, String snakeCase, String routerFilePath)
 
   // 2. ✅ Thêm AutoRoute(...) vào cuối danh sách routes nếu chưa có
   if (!content.contains(routeEntry)) {
-    final listStart = content.indexOf('\tfinal List<AutoRoute> routes = [');
-    final listEnd = content.indexOf('\t];', listStart);
+    final listStart = content.indexOf('  final List<AutoRoute> routes = [');
+    final listEnd = content.indexOf('  ];', listStart);
     if (listEnd != -1) {
       content = content.replaceRange(
         listEnd,
         listEnd,
-        '  $routeEntry\n',
+        '    $routeEntry\n',
       );
     }
   }

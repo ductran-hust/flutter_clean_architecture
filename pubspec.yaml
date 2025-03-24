@@ -61,6 +61,9 @@ dependencies:
   # Testing
   mockito: ^5.4.5
 
+  # Utils
+  uuid: ^4.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
