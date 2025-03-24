@@ -63,29 +63,23 @@ Dự án sử dụng **Clean Architecture**, chia thành các layer rõ ràng:
 - **Shared Layer**: Các thư viện và tiện ích dùng chung.
 
 ## 🛠 Công nghệ sử dụng
-- **UI**: Flutter
-- **State Management**: flutter_bloc
-- **Navigation**: auto_route
-- **Network**: dio, retrofit, dio_smart_retry
-- **Asynchronous Handling**: Future, Stream, rxdart
-- **Local Database**: shared_preferences, hive
-- **DI (Dependency Injection)**: get_it, injectable
-- **Notification**: Firebase, flutter_local_notifications
-- **Localization**: easy_localization
-- **Resource Management**: flutter_gen_runner
-- **Load Image**: cached_network_image
-- **Logger**: Logger, pretty_dio_logger
-- **Debug & Crash Reports**: Firebase Crashlytics
-- **Environment Variables**: flutter_dotenv
-- **Lint**: flutter_lints
-- **Code Generator**: freezed, json_serializable, retrofit_generator, build_runner, injectable_generator
-- **UI Enhancements**: flutter_svg, dropdown_button2, expandable, flutter_slidable, modal_bottom_sheet, table_calendar, carousel_slider
-- **File Handling**: file_picker, open_file, external_path, permission_handler
-- **Security**: local_auth, flutter_secure_storage
-- **Date Handling**: intl, omni_datetime_picker, month_picker_dialog
-- **Alerts & Notifications**: cool_alert, flutter_local_notifications, flutter_native_timezone
-- **Testing**: mockito, faker
-- **Other Utilities**: ntp, tuple, readmore, url_launcher, simple_html_css, rich_readmore, cloud_firestore, firebase_core, focus_detector, video_player, fl_chart
+| Category | Packages |
+|---|---|
+| **UI** | `flutter`, `flutter_svg`, `dropdown_button2`, `card_loading`, `focus_detector` |
+| **State Management** | `flutter_bloc`, `equatable`, `freezed` |
+| **Navigation** | `auto_route`, `auto_route_generator` |
+| **Network** | `dio`, `retrofit`, `dio_smart_retry`, `json_annotation`, `retrofit_generator`, `cookie_jar`, `dio_cookie_manager`, `path_provider` |
+| **Async Handling** | `Future`, `Stream` |
+| **Local Storage** | `shared_preferences`, `flutter_secure_storage` |
+| **Dependency Injection (DI)** | `get_it`, `injectable`, `injectable_generator` |
+| **Localization** | `easy_localization` |
+| **Resource Management** | `flutter_gen_runner` |
+| **Logger** | `logger`, `pretty_dio_logger` |
+| **Alerts & Dialogs** | `cool_alert` |
+| **Testing** | `mockito`, `flutter_test` |
+| **Linting** | `flutter_lints` |
+| **Code Generation** | `build_runner`, `json_serializable`, `freezed`, `injectable_generator`, `auto_route_generator`, `retrofit_generator` |
+| **Context Access** | `one_context` |
 
 ## 📂 Cấu trúc thư mục
 ```
