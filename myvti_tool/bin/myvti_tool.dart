@@ -165,14 +165,14 @@ void updateRouterFile(String className, String snakeCase, String routerFilePath)
   String content = file.readAsStringSync();
 
   final importLine = "import '../view/pages/$snakeCase/${snakeCase}_page.dart';";
-  final routeEntry = "AutoRoute(page: ${className}Route.page),";
+  final routeEntry = 'AutoRoute(page: ${className}Route.page),';
 
   // 1. ✅ Thêm import nếu chưa có
   if (!content.contains(importLine)) {
-    final insertAfter = "import 'package:auto_route/auto_route.dart';";
+    const insertAfter = "import 'package:auto_route/auto_route.dart';";
     content = content.replaceFirst(
       insertAfter,
-      "$insertAfter\n\n$importLine",
+      '$insertAfter\n\n$importLine',
     );
   }
 
