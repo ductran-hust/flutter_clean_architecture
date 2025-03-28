@@ -1,1 +1,5 @@
-{}
+{
+  "error": {
+    "field_is_required": "Field is required"
+  }
+}

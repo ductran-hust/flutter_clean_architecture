@@ -64,6 +64,9 @@ abstract class AppTheme {
       primaryIconTheme: const IconThemeData(color: AppColors.atlantis),
       dividerTheme: _dividerTheme,
       indicatorColor: AppColors.denim,
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.denim
+      ),
       tabBarTheme: TabBarTheme(
         labelStyle: AppStyles.highlightsBold,
         unselectedLabelStyle: AppStyles.highlightsBold.copyWith(

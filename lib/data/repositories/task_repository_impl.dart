@@ -2,7 +2,7 @@ import 'package:injectable/injectable.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/repositories/task_repository.dart';
 
-@Injectable(as: TaskRepository)
+@Singleton(as: TaskRepository)
 class TaskRepositoryImpl extends TaskRepository {
   TaskRepositoryImpl();
 
@@ -40,14 +40,17 @@ class TaskRepositoryImpl extends TaskRepository {
     ),
   ];
 
+  @override
   List<Task> getTasks() {
     return _tasks;
   }
 
+  @override
   void addTask(Task task) {
     _tasks.add(task);
   }
 
+  @override
   void updateTask(Task task) {
     final index = _tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
@@ -55,10 +58,12 @@ class TaskRepositoryImpl extends TaskRepository {
     }
   }
 
+  @override
   void deleteTask(String id) {
     _tasks.removeWhere((task) => task.id == id);
   }
 
+  @override
   Task? getTaskById(String id) {
     try {
       return _tasks.firstWhere((task) => task.id == id);

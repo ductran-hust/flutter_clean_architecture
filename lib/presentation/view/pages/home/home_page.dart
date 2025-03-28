@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_clean_architecture/presentation/router/router.dart';
+import 'package:flutter_clean_architecture/shared/extension/datetime.dart';
 
 import '../../../base/base_page.dart';
 import 'components/category_grid.dart';
@@ -21,16 +22,16 @@ class HomePage extends BasePage<HomeBloc, HomeEvent, HomeState> {
   @override
   Widget builder(BuildContext context) {
     return Scaffold(
-      body: const SafeArea(
+      body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Today',
                     style: TextStyle(
                       fontSize: 24,
@@ -38,18 +39,18 @@ class HomePage extends BasePage<HomeBloc, HomeEvent, HomeState> {
                     ),
                   ),
                   Text(
-                    '26 Dec',
-                    style: TextStyle(
+                    DateTime.now().format(),
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
-              CategoryGrid(),
-              SizedBox(height: 20),
-              Expanded(
+              const SizedBox(height: 20),
+              const CategoryGrid(),
+              const SizedBox(height: 20),
+              const Expanded(
                 child: TaskList(),
               ),
             ],
@@ -57,10 +58,13 @@ class HomePage extends BasePage<HomeBloc, HomeEvent, HomeState> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.pushRoute(NewTaskRoute());
+        onPressed: () async {
+          final result = await context.pushRoute<bool>(NewTaskRoute());
+
+          if(result == true) {
+            context.read<HomeBloc>().add(const HomeEvent.loadData());
+          }
         },
-        backgroundColor: Colors.black,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, color: Colors.white),
       ),
