@@ -16,7 +16,6 @@ formatter:
 linter:
   rules:
     - always_declare_return_types
-    - always_put_control_body_on_new_line
     - annotate_overrides
     - annotate_redeclares
     - unawaited_futures
@@ -142,7 +141,6 @@ linter:
     - sort_child_properties_last
     - sort_constructors_first
     - sort_unnamed_constructors_first
-    - specify_nonobvious_property_types
     - strict_top_level_inference
     - test_types_in_equals
     - throw_in_finally

@@ -1,0 +1,39 @@
+{
+  "todo": {
+    "list": {
+      "title": "My Todos",
+      "search": "Search todos...",
+      "add": "Add Todo",
+      "clearCompleted": "Clear Completed",
+      "total": "{} total",
+      "active": "{} active",
+      "done": "{} done"
+    },
+    "filter": {
+      "all": "All",
+      "active": "Active",
+      "completed": "Done"
+    },
+    "form": {
+      "createTitle": "New Todo",
+      "editTitle": "Edit Todo",
+      "save": "Save",
+      "titleLabel": "Title",
+      "titleHint": "Enter a title...",
+      "descLabel": "Description",
+      "descHint": "Enter a description (optional)...",
+      "createdAt": "Created",
+      "status": "Status"
+    },
+    "status": {
+      "completed": "Completed",
+      "active": "Active"
+    },
+    "empty": {
+      "all": "No todos yet.\nTap + to create one.",
+      "active": "No active todos.\nAll done! 🎉",
+      "completed": "No completed todos yet.",
+      "search": "No results for \"{}\""
+    }
+  }
+}

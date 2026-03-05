@@ -1,0 +1,39 @@
+{
+  "todo": {
+    "list": {
+      "title": "ToDoリスト",
+      "search": "検索...",
+      "add": "追加",
+      "clearCompleted": "完了済みを削除",
+      "total": "合計{}件",
+      "active": "未完了{}件",
+      "done": "完了{}件"
+    },
+    "filter": {
+      "all": "すべて",
+      "active": "未完了",
+      "completed": "完了済み"
+    },
+    "form": {
+      "createTitle": "新しいToDo",
+      "editTitle": "ToDoを編集",
+      "save": "保存",
+      "titleLabel": "タイトル",
+      "titleHint": "タイトルを入力...",
+      "descLabel": "詳細",
+      "descHint": "詳細を入力（任意）...",
+      "createdAt": "作成日",
+      "status": "ステータス"
+    },
+    "status": {
+      "completed": "完了",
+      "active": "未完了"
+    },
+    "empty": {
+      "all": "ToDoがまだありません。\n＋ボタンで追加しましょう。",
+      "active": "未完了のToDoはありません。\nすべて完了です！🎉",
+      "completed": "完了済みのToDoはまだありません。",
+      "search": "\"{}\" の結果はありません"
+    }
+  }
+}

@@ -5,17 +5,64 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.0
+  sdk: 3.11.1
 
 dependencies:
   flutter:
     sdk: flutter
 
+  # State Management
+  flutter_bloc: 9.1.1
+
+  # DI
+  get_it: 9.2.1
+  injectable: 2.7.1+4
+
+  # Navigation
+  auto_route: 11.1.0
+
+  # Network
+  dio: 5.9.2
+  retrofit: 4.9.2
+
+  # Local Storage
+  hive_ce: 2.19.3
+  hive_ce_flutter: 2.3.4
+
+  # Code Generation
+  freezed_annotation: 3.1.0
+  json_annotation: 4.11.0
+
+  # Localization
+  easy_localization: 3.0.8
+  easy_logger: 0.0.2
+
+  # Logging
+  talker_flutter: 5.1.15
+  talker_dio_logger: 5.1.15
+
+  # Utils
+  uuid: 4.5.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^6.0.0
+  # Code Generation
+  build_runner: 2.12.1
+  freezed: 3.2.5
+  injectable_generator: 2.12.1
+  auto_route_generator: 10.5.0
+  retrofit_generator: 10.2.3
+  hive_ce_generator: 1.11.1
+  json_serializable: 6.13.0
+  source_gen: 4.2.0
+
+dependency_overrides:
+    shared_preferences_foundation: 2.5.4
+    shared_preferences: 2.3.4
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/translations/
