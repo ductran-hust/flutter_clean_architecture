@@ -58,7 +58,6 @@ class TodoListController extends BaseController<TodoListState> {
 
   Future<void> deleteTodo(String id) => launch(() async {
     await _deleteTodo(id);
-    await Future.delayed(const Duration(seconds: 1), () {});
     updateData(state.data.copyWith(todos: state.data.todos.where((t) => t.id != id).toList()));
   });
 

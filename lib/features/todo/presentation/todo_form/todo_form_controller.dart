@@ -7,7 +7,11 @@ import 'package:injectable/injectable.dart';
 @injectable
 class TodoFormController extends BaseController<TodoFormState> {
   TodoFormController(@factoryParam TodoEntity? initialTodo)
-    : super(BaseState(data: TodoFormState(initialTodo: initialTodo)));
+    : super(BaseState(data: TodoFormState(
+        initialTodo: initialTodo,
+        title: initialTodo?.title ?? '',
+        description: initialTodo?.description ?? '',
+      )));
 
   @override
   Future<void> initData() => launch(() async {});

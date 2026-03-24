@@ -1,34 +1,21 @@
-import 'package:auto_route/auto_route.dart';
+import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_clean_architecture/shared/components/atoms/app_bar_view.dart';
+import 'package:flutter_clean_architecture/core/theme/colors.dart';
+import 'package:flutter_clean_architecture/core/theme/text_styles.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_avatar.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_badge.dart';
 import 'package:flutter_clean_architecture/shared/components/atoms/app_button.dart';
-import 'package:flutter_clean_architecture/shared/components/atoms/app_checkbox.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_card.dart';
 import 'package:flutter_clean_architecture/shared/components/atoms/app_chip.dart';
-import 'package:flutter_clean_architecture/shared/components/atoms/app_dialog.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_divider.dart';
 import 'package:flutter_clean_architecture/shared/components/atoms/app_dropdown.dart';
-import 'package:flutter_clean_architecture/shared/components/atoms/app_radio.dart';
-import 'package:flutter_clean_architecture/shared/components/atoms/app_switch.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_list_tile.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_status_tag.dart';
 import 'package:flutter_clean_architecture/shared/components/atoms/app_text_field.dart';
 
-/// A debug screen that previews all shared widgets in the app.
-///
-/// Useful for:
-/// - Quickly checking widget styles and variants
-/// - Validating theme changes across all components
-/// - Onboarding new developers to available UI components
-///
-/// Add to [AppRouter] in debug mode only:
-/// ```dart
-/// if (kDebugMode)
-///   AutoRoute(
-///     page: WidgetCatalogRoute.page,
-///     path: '/debug/widgets',
-///     meta: const {
-///       'screenName': 'WidgetCatalog',
-///       'screenCode': 'SCREEN-015',
-///     },
-///   ),
-/// ```
+/// Debug screen listing all UI components.
+/// Add to your router in DEBUG mode:
+///   AutoRoute(page: WidgetCatalogRoute.page, path: '/debug/widgets')
 @RoutePage()
 class WidgetCatalogPage extends StatefulWidget {
   const WidgetCatalogPage({super.key});
@@ -38,351 +25,322 @@ class WidgetCatalogPage extends StatefulWidget {
 }
 
 class _WidgetCatalogPageState extends State<WidgetCatalogPage> {
-  // TextField
-  final _textController = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  String? _selectedCategory;
+  bool _chipA = true;
+  bool _chipB = false;
+  bool _isLoading = false;
 
-  // Checkbox
-  bool _checkboxValue = false;
-  bool _checkboxChecked = true;
-
-  // Switch
-  bool _switchValue = false;
-
-  // Radio
-  String _radioValue = 'option1';
-
-  // Chip
-  bool _chip1Selected = true;
-  bool _chip2Selected = false;
-  bool _chip3Selected = false;
-
-  // Dropdown
-  String? _dropdownValue;
+  static const _categories = ['Work', 'Personal', 'Health', 'Finance'];
 
   @override
   void dispose() {
-    _textController.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textStyles = context.appTextStyles;
+
     return Scaffold(
-      appBar: const AppBarView(title: 'Widget Catalog'),
+      appBar: AppBar(title: const Text('Widget Catalog')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         children: [
-          _Section(title: 'Button', children: [
-            _Row(children: [
-              AppButton(label: 'Filled', onPressed: () {}),
-              AppButton(label: 'Outlined', onPressed: () {}, variant: AppButtonVariant.outlined),
-              AppButton(label: 'Text', onPressed: () {}, variant: AppButtonVariant.text),
-            ]),
-            const SizedBox(height: 8),
-            _Row(children: [
-              AppButton(label: 'Small', onPressed: () {}, size: AppButtonSize.small),
-              AppButton(label: 'Medium', onPressed: () {}),
-              AppButton(label: 'Large', onPressed: () {}, size: AppButtonSize.large),
-            ]),
-            const SizedBox(height: 8),
-            _Row(children: [
-              AppButton(label: 'Prefix', onPressed: () {}, prefixIcon: Icons.add),
-              AppButton(label: 'Suffix', onPressed: () {}, suffixIcon: Icons.arrow_forward),
-              AppButton(label: 'Loading', onPressed: () {}, isLoading: true),
-            ]),
-            const SizedBox(height: 8),
-            AppButton(label: 'Full Width', onPressed: () {}, isFullWidth: true),
-            const SizedBox(height: 8),
-            const AppButton(label: 'Disabled', isFullWidth: true),
+          // ── Section: Typography ──────────────────────────────────────────
+          _Section(label: 'Typography', children: [
+            Text('Headline Large', style: textStyles.headlineLarge.copyWith(color: colors.onSurfaceMuted)),
+            Text('Headline Small', style: textStyles.headlineSmall.copyWith(color: colors.onSurfaceMuted)),
+            Text('Title Medium', style: textStyles.titleMedium.copyWith(color: colors.onSurfaceMuted)),
+            Text('Body Large', style: textStyles.bodyLarge.copyWith(color: colors.onSurfaceMuted)),
+            Text('Body Medium — muted', style: textStyles.bodyMedium.copyWith(color: colors.onSurfaceMuted)),
+            Text('Label Large', style: textStyles.labelLarge.copyWith(color: colors.onSurfaceMuted)),
+            Text('Body Small', style: textStyles.bodySmall.copyWith(color: colors.onSurfaceMuted)),
           ]),
 
-          _Section(title: 'Text Field', children: [
+          // ── Section: Buttons ─────────────────────────────────────────────
+          _Section(label: 'Buttons', children: [
+            AppButton(label: 'Login', onPressed: () {}),
+            const SizedBox(height: 12),
+            AppButton.outlined(label: 'Register', onPressed: () {}),
+            const SizedBox(height: 12),
+            AppButton.ghost(label: 'Forgot password?', onPressed: () {}),
+            const SizedBox(height: 12),
+            AppButton.danger(label: 'Delete account', onPressed: () {}),
+            const SizedBox(height: 12),
+            const AppButton(
+              label: 'Disabled',
+            ),
+            const SizedBox(height: 12),
+            AppButton(
+              label: 'Loading',
+              isLoading: _isLoading,
+              onPressed: () async {
+                setState(() => _isLoading = true);
+                await Future.delayed(const Duration(seconds: 2));
+                if (mounted) setState(() => _isLoading = false);
+              },
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'Medium',
+                    size: AppButtonSize.medium,
+                    onPressed: () {},
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AppButton(
+                  label: 'Small',
+                  size: AppButtonSize.small,
+                  isFullWidth: false,
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ]),
+
+          // ── Section: Text Fields ─────────────────────────────────────────
+          _Section(label: 'Text Fields', children: [
             AppTextField(
-              controller: _textController,
-              label: 'Label',
-              hint: 'Hint text',
+              label: 'Email',
+              hint: 'you@example.com',
+              controller: _emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icons.email_outlined,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            AppTextField.password(controller: _passCtrl),
+            const SizedBox(height: 12),
             const AppTextField(
-              label: 'With prefix icon',
-              hint: 'Search...',
-              prefixIcon: Icons.search,
+              label: 'Disabled Field',
+              hint: 'Cannot edit this',
+              enabled: false,
+              prefixIcon: Icons.lock_outline,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             const AppTextField(
-              label: 'With error',
+              label: 'With Error',
               errorText: 'This field is required',
+              prefixIcon: Icons.person_outline,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             const AppTextField(
-              label: 'Disabled',
-              hint: 'Cannot edit',
-              enabled: false,
-            ),
-            const SizedBox(height: 8),
-            const AppTextField(
-              label: 'Multiline',
-              hint: 'Enter long text...',
-              maxLines: 3,
+              label: 'Note',
+              hint: 'Write something...',
+              maxLines: 4,
+              minLines: 3,
             ),
           ]),
 
-          _Section(title: 'Checkbox', children: [
-            _Row(children: [
-              AppCheckbox(
-                value: _checkboxValue,
-                onChanged: (v) => setState(() => _checkboxValue = v ?? false),
-                label: 'Unchecked',
-              ),
-              AppCheckbox(
-                value: _checkboxChecked,
-                onChanged: (v) => setState(() => _checkboxChecked = v ?? false),
-                label: 'Checked',
-              ),
-            ]),
-            const SizedBox(height: 8),
-            AppCheckbox(
-              value: false,
-              onChanged: (_) {},
-              label: 'Disabled',
-              enabled: false,
+          // ── Section: Dropdown ────────────────────────────────────────────
+          _Section(label: 'Dropdown', children: [
+            AppDropdown<String>(
+              label: 'Category',
+              hint: 'Select a category',
+              value: _selectedCategory,
+              items: _categories,
+              prefixIcon: Icons.category_outlined,
+              onChanged: (v) => setState(() => _selectedCategory = v),
             ),
           ]),
 
-          _Section(title: 'Switch', children: [
-            AppSwitch(
-              value: _switchValue,
-              onChanged: (v) => setState(() => _switchValue = v),
-              label: 'Toggle feature',
-              description: 'Enable or disable this feature',
-            ),
-            const SizedBox(height: 8),
-            AppSwitch(
-              value: true,
-              onChanged: (_) {},
-              label: 'Disabled switch',
-              enabled: false,
-            ),
-          ]),
-
-          _Section(title: 'Radio', children: [
-            AppRadioGroup<String>(
-              value: _radioValue,
-              onChanged: (v) => setState(() => _radioValue = v),
-              items: const [
-                AppRadioItem(label: 'Option 1', value: 'option1'),
-                AppRadioItem(label: 'Option 2', value: 'option2'),
-                AppRadioItem(label: 'Option 3', value: 'option3'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            AppRadioGroup<String>(
-              value: _radioValue,
-              onChanged: (v) => setState(() => _radioValue = v),
-              direction: Axis.horizontal,
-              items: const [
-                AppRadioItem(label: 'A', value: 'option1'),
-                AppRadioItem(label: 'B', value: 'option2'),
-                AppRadioItem(label: 'C', value: 'option3'),
-              ],
-            ),
-          ]),
-
-          _Section(title: 'Chip', children: [
+          // ── Section: Chips ───────────────────────────────────────────────
+          _Section(label: 'Chips', children: [
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 AppChip(
-                  label: 'Selected',
-                  selected: _chip1Selected,
-                  onTap: () => setState(() => _chip1Selected = !_chip1Selected),
+                  label: 'Work',
+                  isSelected: _chipA,
+                  leading: const Icon(Icons.work_outline, size: 14),
+                  onTap: () => setState(() => _chipA = !_chipA),
                 ),
                 AppChip(
-                  label: 'Unselected',
-                  selected: _chip2Selected,
-                  onTap: () => setState(() => _chip2Selected = !_chip2Selected),
+                  label: 'Personal',
+                  isSelected: _chipB,
+                  onTap: () => setState(() => _chipB = !_chipB),
                 ),
                 AppChip(
-                  label: 'With icon',
-                  selected: _chip3Selected,
-                  prefixIcon: Icons.music_note,
-                  onTap: () => setState(() => _chip3Selected = !_chip3Selected),
-                ),
-                AppChip(
-                  label: 'Deletable',
+                  label: 'Removable',
+                  isSelected: true,
+                  onTap: () {},
                   onDeleted: () {},
                 ),
+                const AppChip(label: 'Inactive'),
               ],
             ),
           ]),
 
-          _Section(title: 'Dropdown', children: [
-            AppDropdown<String>(
-              value: _dropdownValue,
-              label: 'Select option',
-              hint: 'Choose one',
-              onChanged: (v) => setState(() => _dropdownValue = v),
-              items: const [
-                AppDropdownItem(label: 'Option A', value: 'a', icon: Icons.star),
-                AppDropdownItem(label: 'Option B', value: 'b', icon: Icons.favorite),
-                AppDropdownItem(label: 'Option C', value: 'c', icon: Icons.music_note),
-              ],
-            ),
-            const SizedBox(height: 8),
-            AppDropdown<String>(
-              value: null,
-              label: 'Disabled',
-              hint: 'Cannot select',
-              enabled: false,
-              onChanged: (_) {},
-              items: const [
-                AppDropdownItem(label: 'Option A', value: 'a'),
-              ],
-            ),
-          ]),
-
-          _Section(title: 'Dialog', children: [
+          // ── Section: Status Tags ─────────────────────────────────────────
+          const _Section(label: 'Status Tags', children: [
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                AppButton(
-                  label: 'Success',
-                  onPressed: () => AppDialog.success(context, message: 'Operation completed successfully.'),
-                  color: Colors.green,
-                  size: AppButtonSize.small,
+                AppStatusTag(label: 'Active', type: AppStatusTagType.success, icon: Icons.check_circle_outline),
+                AppStatusTag(label: 'Error', type: AppStatusTagType.error, icon: Icons.error_outline),
+                AppStatusTag(label: 'Pending', type: AppStatusTagType.warning, icon: Icons.access_time),
+                AppStatusTag(label: 'Info', type: AppStatusTagType.info),
+                AppStatusTag(label: 'Neutral'),
+              ],
+            ),
+          ]),
+
+          // ── Section: Badges ──────────────────────────────────────────────
+          const _Section(label: 'Badges', children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                AppBadge(
+                  count: 3,
+                  child: Icon(Icons.notifications_outlined, size: 28),
                 ),
-                AppButton(
-                  label: 'Error',
-                  onPressed: () => AppDialog.error(context, message: 'Something went wrong. Please try again.'),
-                  color: Colors.red,
-                  size: AppButtonSize.small,
+                AppBadge(
+                  count: 99,
+                  child: Icon(Icons.mail_outline, size: 28),
                 ),
-                AppButton(
-                  label: 'Warning',
-                  onPressed: () => AppDialog.warning(context, message: 'This action cannot be undone.'),
-                  color: Colors.orange,
-                  size: AppButtonSize.small,
+                AppBadge(
+                  count: 120,
+                  child: Icon(Icons.chat_bubble_outline, size: 28),
                 ),
-                AppButton(
-                  label: 'Info',
-                  onPressed: () => AppDialog.info(context, message: 'Here is some useful information.'),
-                  size: AppButtonSize.small,
-                ),
-                AppButton(
-                  label: 'Confirm',
-                  onPressed: () async {
-                    final result = await AppDialog.confirm(
-                      context,
-                      message: 'Are you sure you want to proceed?',
-                    );
-                    if (context.mounted) {
-                      AppDialog.info(context, message: 'Result: $result');
-                    }
-                  },
-                  variant: AppButtonVariant.outlined,
-                  size: AppButtonSize.small,
-                ),
-                AppButton(
-                  label: 'Dangerous',
-                  onPressed: () async {
-                    await AppDialog.confirm(
-                      context,
-                      title: 'Delete Item',
-                      message: 'This will permanently delete the item.',
-                      isDangerous: true,
-                      confirmLabel: 'Delete',
-                    );
-                  },
-                  color: Colors.red,
-                  variant: AppButtonVariant.outlined,
-                  size: AppButtonSize.small,
-                ),
-                AppButton(
-                  label: 'Input',
-                  onPressed: () async {
-                    final result = await AppDialog.input(
-                      context,
-                      title: 'Enter Name',
-                      hint: 'Your name',
-                    );
-                    if (context.mounted && result != null) {
-                      AppDialog.success(context, message: 'Hello, $result!');
-                    }
-                  },
-                  variant: AppButtonVariant.outlined,
-                  size: AppButtonSize.small,
-                ),
-                AppButton(
-                  label: 'Loading',
-                  onPressed: () async {
-                    AppDialog.showLoading(context);
-                    await Future.delayed(const Duration(seconds: 2));
-                    if (context.mounted) AppDialog.hideLoading(context);
-                  },
-                  variant: AppButtonVariant.outlined,
-                  size: AppButtonSize.small,
+                AppBadge(
+                  count: 0,
+                  child: Icon(Icons.shopping_cart_outlined, size: 28),
                 ),
               ],
             ),
           ]),
 
-          const SizedBox(height: 32),
+          // ── Section: Cards ───────────────────────────────────────────────
+          _Section(label: 'Cards', children: [
+            AppCard(
+              onTap: () {},
+              child: Row(
+                children: [
+                  const AppAvatar(name: 'John Doe', size: 44),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'John Doe',
+                          style: textStyles.titleSmall.copyWith(
+                            color: colors.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'john@example.com',
+                          style: textStyles.bodySmall.copyWith(
+                            color: colors.onSurfaceMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const AppStatusTag(
+                    label: 'Pro',
+                    type: AppStatusTagType.info,
+                  ),
+                ],
+              ),
+            ),
+          ]),
+
+          // ── Section: List Tiles ──────────────────────────────────────────
+          _Section(label: 'List Tiles', children: [
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  AppListTile(
+                    leading: Icon(Icons.person_outline, color: colors.primary),
+                    title: 'Profile',
+                    subtitle: 'View and edit your profile',
+                    onTap: () {},
+                    showDivider: true,
+                  ),
+                  AppListTile(
+                    leading: Icon(Icons.notifications_outlined, color: colors.primary),
+                    title: 'Notifications',
+                    trailing: const AppBadge(count: 3, child: SizedBox(width: 8, height: 8)),
+                    onTap: () {},
+                    showDivider: true,
+                  ),
+                  AppListTile(
+                    leading: Icon(Icons.settings_outlined, color: colors.primary),
+                    title: 'Settings',
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ]),
+
+          // ── Section: Dividers ────────────────────────────────────────────
+          const _Section(label: 'Dividers', children: [
+            AppDivider(),
+            SizedBox(height: 8),
+            AppDivider.labeled(label: 'or continue with'),
+            SizedBox(height: 8),
+            AppDivider(),
+          ]),
+
+          // ── Section: Avatars ─────────────────────────────────────────────
+          const _Section(label: 'Avatars', children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                AppAvatar(name: 'Alice B', size: 56),
+                AppAvatar(name: 'CD', size: 48),
+                AppAvatar(name: 'E'),
+                AppAvatar(size: 32),
+              ],
+            ),
+          ]),
+
+          const SizedBox(height: 48),
         ],
       ),
     );
   }
 }
 
-// ── Internal Widgets ──────────────────────────────────
-
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
+  const _Section({required this.label, required this.children});
 
-  final String title;
+  final String label;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textStyles = context.appTextStyles;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 24, bottom: 12),
-          child: Row(
-            children: [
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade500,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(child: Divider(color: Colors.grey.shade200)),
-            ],
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            label.toUpperCase(),
+            style: textStyles.labelSmall.copyWith(
+              color: colors.onSurfaceMuted,
+              letterSpacing: 1.5,
+            ),
           ),
         ),
         ...children,
+        const SizedBox(height: 32),
       ],
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: children,
     );
   }
 }

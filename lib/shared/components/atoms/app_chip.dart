@@ -1,51 +1,79 @@
-import 'package:flutter/material.dart';
+// ─────────────────────────────────────────────────────────────────────────────
+// AppChip
+// ─────────────────────────────────────────────────────────────────────────────
 
+import 'package:flutter/material.dart';
+import 'package:flutter_clean_architecture/core/theme/colors.dart';
+
+/// Pill-shaped chip for filters, tags, and categories.
+///
+/// ```dart
+/// AppChip(label: 'Work', isSelected: true, onTap: () {})
+/// ```
 class AppChip extends StatelessWidget {
   const AppChip({
     super.key,
     required this.label,
+    this.isSelected = false,
     this.onTap,
+    this.leading,
     this.onDeleted,
-    this.selected = false,
-    this.prefixIcon,
     this.color,
   });
 
   final String label;
+  final bool isSelected;
   final VoidCallback? onTap;
+  final Widget? leading;
   final VoidCallback? onDeleted;
-  final bool selected;
-  final IconData? prefixIcon;
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final c = color ?? scheme.primary;
+    final colors = context.appColors;
+    final activeColor = color ?? colors.primary;
 
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (prefixIcon != null) ...[
-            Icon(prefixIcon, size: 14, color: selected ? scheme.onPrimary : c),
-            const SizedBox(width: 4),
+    final bgColor = isSelected
+        ? activeColor.withOpacity(0.15)
+        : colors.surfaceVariant;
+    final borderColor = isSelected ? activeColor : colors.grey200;
+    final textColor = isSelected ? activeColor : colors.onSurfaceMuted;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderColor, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (leading != null) ...[
+              leading!,
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
+            if (onDeleted != null) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: onDeleted,
+                child: Icon(Icons.close, size: 14, color: textColor),
+              ),
+            ],
           ],
-          Text(label),
-        ],
+        ),
       ),
-      selected: selected,
-      onSelected: onTap != null ? (_) => onTap!() : null,
-      onDeleted: onDeleted,
-      selectedColor: c,
-      checkmarkColor: scheme.onPrimary,
-      labelStyle: textTheme.labelMedium?.copyWith(
-        color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
-      ),
-      backgroundColor: scheme.surfaceContainerHighest,
-      side: BorderSide(color: selected ? c : scheme.outlineVariant),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }

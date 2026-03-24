@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_clean_architecture/core/theme/themes.dart';
 import 'package:flutter_clean_architecture/routes/app_router.dart';
 import 'package:flutter_clean_architecture/routes/router_observer.dart';
 
@@ -22,10 +23,8 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       routerConfig: _router.config(navigatorObservers: () => [RouterObserver()]),
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
     );
   }
 }

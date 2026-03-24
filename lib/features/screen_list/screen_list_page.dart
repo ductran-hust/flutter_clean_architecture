@@ -14,12 +14,11 @@ import 'package:flutter_clean_architecture/routes/app_router.dart';
 /// To configure a route, add meta to [AppRouter]:
 /// ```dart
 /// AutoRoute(
-///   page: ArtistRoute.page,
-///   path: '/artist/:id',
+///   page: TodoListRoute.page,
+///   path: '/debug/todos',
 ///   meta: const {
-///     'screenName': 'Artist',
-///     'screenCode': 'SCREEN-010',
-///     'mockArgs': {'id': 'artist-001'}, // optional
+///     'screenName': 'TodoList',
+///     'screenCode': 'DBG-004',
 ///   },
 /// )
 /// ```
