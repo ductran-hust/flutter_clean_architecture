@@ -7,9 +7,16 @@ import 'package:flutter_clean_architecture/core/di/injection_container.dart';
 import 'package:flutter_clean_architecture/core/extensions/datetime_extensions.dart';
 import 'package:flutter_clean_architecture/core/localization/locale_keys.dart';
 import 'package:flutter_clean_architecture/core/theme/colors.dart';
+import 'package:flutter_clean_architecture/core/theme/text_styles.dart';
 import 'package:flutter_clean_architecture/features/todo/domain/entities/todo_entity.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/todo_form/todo_form_controller.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/todo_form/todo_form_state.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_button.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_card.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_dialog.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_divider.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_status_tag.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_text_field.dart';
 
 @RoutePage()
 class TodoFormPage extends BasePage<TodoFormController, TodoFormState> {
@@ -74,6 +81,7 @@ class _TodoFormViewState extends State<_TodoFormView> {
     final data = context.watch<TodoFormController>().state.data;
     final cubit = widget.controller;
     final colors = context.appColors;
+    final textStyles = context.appTextStyles;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -109,18 +117,20 @@ class _TodoFormViewState extends State<_TodoFormView> {
                       data.isEditMode
                           ? LocaleKeys.todo_form_editTitle.tr()
                           : LocaleKeys.todo_form_createTitle.tr(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                      style: textStyles.titleLarge.copyWith(
                         color: colors.onBackground,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                  // Save button
-                  _SaveButton(
-                    isEnabled: data.isValid,
-                    onTap: () => _onSave(context, cubit),
-                    colors: colors,
+                  // Save button — AppButton
+                  AppButton(
+                    label: LocaleKeys.todo_form_save.tr(),
+                    onPressed: (!data.hasSubmitted || data.isValid)
+                        ? () => _onSave(context, cubit)
+                        : null,
+                    size: AppButtonSize.small,
+                    isFullWidth: false,
                   ),
                 ],
               ),
@@ -133,25 +143,23 @@ class _TodoFormViewState extends State<_TodoFormView> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  // Title field
-                  _FormField(
+                  // Title field — AppTextField
+                  AppTextField(
                     controller: _titleController,
                     focusNode: _titleFocus,
-                    label: LocaleKeys.todo_form_titleLabel.tr(),
+                    label: '${LocaleKeys.todo_form_titleLabel.tr()} *',
                     hint: LocaleKeys.todo_form_titleHint.tr(),
                     onChanged: cubit.updateTitle,
                     onSubmitted: (_) => _descFocus.requestFocus(),
                     textInputAction: TextInputAction.next,
-                    colors: colors,
-                    isRequired: true,
-                    errorText: _titleController.text.isNotEmpty && !data.isValid
-                        ? 'Title is required'
-                        : null,
+                    errorText: data.titleError,
+                    maxLength: TodoFormState.titleMaxLength,
+                    helperText: '${data.titleCharCount}/${TodoFormState.titleMaxLength}',
                   ),
                   const SizedBox(height: 20),
 
-                  // Description field
-                  _FormField(
+                  // Description field — AppTextField
+                  AppTextField(
                     controller: _descController,
                     focusNode: _descFocus,
                     label: LocaleKeys.todo_form_descLabel.tr(),
@@ -159,54 +167,49 @@ class _TodoFormViewState extends State<_TodoFormView> {
                     onChanged: cubit.updateDescription,
                     maxLines: 5,
                     textInputAction: TextInputAction.newline,
-                    colors: colors,
+                    errorText: data.descriptionError,
+                    maxLength: TodoFormState.descMaxLength,
+                    helperText: '${data.descCharCount}/${TodoFormState.descMaxLength}',
                   ),
 
                   // ── Meta info (edit mode) ──
                   if (data.isEditMode) ...[
                     const SizedBox(height: 28),
-                    _Divider(colors: colors),
-                    const SizedBox(height: 20),
+                    const AppDivider(),
 
                     Text(
                       'Details',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      style: textStyles.titleSmall.copyWith(
                         color: colors.onSurfaceMuted,
                       ),
                     ),
                     const SizedBox(height: 12),
 
-                    _MetaCard(
-                      colors: colors,
-                      items: [
-                        _MetaItem(
-                          icon: Icons.calendar_today_rounded,
-                          label: LocaleKeys.todo_form_createdAt.tr(),
-                          value: data.initialTodo!.createdAt.toFormatted(AppDateFormat.ddMMyyyyHHmm),
-                          iconColor: colors.primary,
-                        ),
-                        if (data.initialTodo!.updatedAt != null)
-                          _MetaItem(
-                            icon: Icons.update_rounded,
-                            label: 'Updated',
-                            value: data.initialTodo!.updatedAt!.toFormatted(AppDateFormat.ddMMyyyyHHmm),
-                            iconColor: colors.secondary,
+                    // AppCard wrapping meta items
+                    AppCard(
+                      child: Column(
+                        children: [
+                          _MetaRow(
+                            icon: Icons.calendar_today_rounded,
+                            label: LocaleKeys.todo_form_createdAt.tr(),
+                            value: data.initialTodo!.createdAt
+                                .toFormatted(AppDateFormat.ddMMyyyyHHmm),
+                            iconColor: colors.primary,
                           ),
-                        _MetaItem(
-                          icon: data.initialTodo!.isCompleted
-                              ? Icons.check_circle_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          label: LocaleKeys.todo_form_status.tr(),
-                          value: data.initialTodo!.isCompleted
-                              ? LocaleKeys.todo_status_completed.tr()
-                              : LocaleKeys.todo_status_active.tr(),
-                          iconColor: data.initialTodo!.isCompleted
-                              ? colors.success
-                              : colors.warning,
-                        ),
-                      ],
+                          if (data.initialTodo!.updatedAt != null) ...[
+                            const AppDivider(height: 16),
+                            _MetaRow(
+                              icon: Icons.update_rounded,
+                              label: 'Updated',
+                              value: data.initialTodo!.updatedAt!
+                                  .toFormatted(AppDateFormat.ddMMyyyyHHmm),
+                              iconColor: colors.secondary,
+                            ),
+                          ],
+                          const AppDivider(height: 16),
+                          _StatusRow(todo: data.initialTodo!),
+                        ],
+                      ),
                     ),
                   ],
 
@@ -221,35 +224,41 @@ class _TodoFormViewState extends State<_TodoFormView> {
   }
 
   void _onSave(BuildContext context, TodoFormController cubit) {
-    if (!cubit.state.data.isValid) return;
-    final entity = cubit.buildEntity();
+    final entity = cubit.validateAndBuild();
+    if (entity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(child: Text('Please fix the errors before saving')),
+            ],
+          ),
+          backgroundColor: context.appColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
     context.router.pop(entity);
   }
 
   Future<void> _onCancel(BuildContext context, TodoFormState data) async {
-    final hasChanges = data.title.isNotEmpty || data.description.isNotEmpty;
-    if (hasChanges && !data.isEditMode) {
-      final discard = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Discard Changes?'),
-          content: const Text('You have unsaved changes. Are you sure you want to go back?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep Editing'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text('Discard'),
-            ),
-          ],
-        ),
+    if (data.hasChanges) {
+      // AppDialog.confirm
+      final discard = await AppDialog.confirm(
+        context,
+        title: 'Discard Changes?',
+        message: 'You have unsaved changes. Are you sure you want to go back?',
+        confirmLabel: 'Discard',
+        cancelLabel: 'Keep Editing',
+        isDangerous: true,
       );
-      if (discard != true) return;
+      if (!discard) return;
     }
     if (context.mounted) {
       await context.router.maybePop();
@@ -257,239 +266,10 @@ class _TodoFormViewState extends State<_TodoFormView> {
   }
 }
 
-// ── Save Button ──
+// ── Meta Row ──
 
-class _SaveButton extends StatelessWidget {
-  const _SaveButton({
-    required this.isEnabled,
-    required this.onTap,
-    required this.colors,
-  });
-
-  final bool isEnabled;
-  final VoidCallback onTap;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: isEnabled ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isEnabled ? colors.primary : colors.grey200,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: isEnabled
-              ? [
-                  BoxShadow(
-                    color: colors.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          LocaleKeys.todo_form_save.tr(),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isEnabled ? Colors.white : colors.onSurfaceMuted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Form Field ──
-
-class _FormField extends StatelessWidget {
-  const _FormField({
-    required this.controller,
-    required this.focusNode,
-    required this.label,
-    required this.hint,
-    required this.onChanged,
-    required this.colors,
-    this.maxLines = 1,
-    this.textInputAction,
-    this.onSubmitted,
-    this.isRequired = false,
-    this.errorText,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String label;
-  final String hint;
-  final ValueChanged<String> onChanged;
-  final AppColors colors;
-  final int maxLines;
-  final TextInputAction? textInputAction;
-  final ValueChanged<String>? onSubmitted;
-  final bool isRequired;
-  final String? errorText;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colors.onSurface,
-              ),
-            ),
-            if (isRequired)
-              Text(
-                ' *',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colors.error,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: errorText != null ? colors.error : colors.grey200,
-              width: errorText != null ? 1.5 : 1,
-            ),
-          ),
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            onChanged: onChanged,
-            onSubmitted: onSubmitted,
-            textInputAction: textInputAction,
-            maxLines: maxLines,
-            style: TextStyle(fontSize: 15, color: colors.onSurface),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(color: colors.onSurfaceMuted, fontSize: 14),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.all(16),
-            ),
-          ),
-        ),
-        if (errorText != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            errorText!,
-            style: TextStyle(fontSize: 12, color: colors.error),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ── Divider ──
-
-class _Divider extends StatelessWidget {
-  const _Divider({required this.colors});
-
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 1,
-      color: colors.grey200,
-    );
-  }
-}
-
-// ── Meta Card ──
-
-class _MetaCard extends StatelessWidget {
-  const _MetaCard({required this.colors, required this.items});
-
-  final AppColors colors;
-  final List<_MetaItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.grey200),
-      ),
-      child: Column(
-        children: items.asMap().entries.map((entry) {
-          final i = entry.key;
-          final item = entry.value;
-          return Column(
-            children: [
-              if (i > 0) ...[
-                const SizedBox(height: 8),
-                Container(height: 1, color: colors.grey200),
-                const SizedBox(height: 8),
-              ],
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: item.iconColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(item.icon, size: 16, color: item.iconColor),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.onSurfaceMuted,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.value,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: colors.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _MetaItem {
-  const _MetaItem({
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -500,4 +280,101 @@ class _MetaItem {
   final String label;
   final String value;
   final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textStyles = context.appTextStyles;
+
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: iconColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: textStyles.labelSmall.copyWith(color: colors.onSurfaceMuted),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: textStyles.titleSmall.copyWith(color: colors.onSurface),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Status Row ──
+
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({required this.todo});
+
+  final TodoEntity todo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final textStyles = context.appTextStyles;
+    final statusColor = todo.isCompleted ? colors.success : colors.warning;
+
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: statusColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            todo.isCompleted
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            size: 16,
+            color: statusColor,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                LocaleKeys.todo_form_status.tr(),
+                style: textStyles.labelSmall.copyWith(color: colors.onSurfaceMuted),
+              ),
+              const SizedBox(height: 4),
+              // AppStatusTag
+              AppStatusTag(
+                label: todo.isCompleted
+                    ? LocaleKeys.todo_status_completed.tr()
+                    : LocaleKeys.todo_status_active.tr(),
+                type: todo.isCompleted
+                    ? AppStatusTagType.success
+                    : AppStatusTagType.warning,
+                icon: todo.isCompleted
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -2,7 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_clean_architecture/core/localization/locale_keys.dart';
 import 'package:flutter_clean_architecture/core/theme/colors.dart';
+import 'package:flutter_clean_architecture/core/theme/text_styles.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/todo_list/todo_list_state.dart';
+
 
 class TodoFilterTabs extends StatelessWidget {
   const TodoFilterTabs({
@@ -28,30 +30,31 @@ class TodoFilterTabs extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          _FilterChip(
+          _FilterTab(
             label: LocaleKeys.todo_filter_all.tr(),
             count: totalCount,
             isSelected: selectedFilter == TodoFilter.all,
             onTap: () => onFilterChanged(TodoFilter.all),
+            color: colors.primary,
             colors: colors,
           ),
           const SizedBox(width: 8),
-          _FilterChip(
+          _FilterTab(
             label: LocaleKeys.todo_filter_active.tr(),
             count: activeCount,
             isSelected: selectedFilter == TodoFilter.active,
             onTap: () => onFilterChanged(TodoFilter.active),
+            color: const Color(0xFF3B82F6),
             colors: colors,
-            activeColor: const Color(0xFF3B82F6),
           ),
           const SizedBox(width: 8),
-          _FilterChip(
+          _FilterTab(
             label: LocaleKeys.todo_filter_completed.tr(),
             count: completedCount,
             isSelected: selectedFilter == TodoFilter.completed,
             onTap: () => onFilterChanged(TodoFilter.completed),
+            color: const Color(0xFF22C55E),
             colors: colors,
-            activeColor: const Color(0xFF22C55E),
           ),
         ],
       ),
@@ -59,26 +62,28 @@ class TodoFilterTabs extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+/// Custom filter tab built on top of AppChip's visual language
+/// but with expanded layout + count badge that AppChip doesn't support.
+class _FilterTab extends StatelessWidget {
+  const _FilterTab({
     required this.label,
     required this.count,
     required this.isSelected,
     required this.onTap,
+    required this.color,
     required this.colors,
-    this.activeColor,
   });
 
   final String label;
   final int count;
   final bool isSelected;
   final VoidCallback onTap;
+  final Color color;
   final AppColors colors;
-  final Color? activeColor;
 
   @override
   Widget build(BuildContext context) {
-    final color = activeColor ?? colors.primary;
+    final textStyles = context.appTextStyles;
 
     return Expanded(
       child: GestureDetector(
@@ -100,8 +105,7 @@ class _FilterChip extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 13,
+                style: textStyles.labelMedium.copyWith(
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected ? color : colors.onSurfaceMuted,
                 ),
@@ -116,8 +120,7 @@ class _FilterChip extends StatelessWidget {
                 ),
                 child: Text(
                   '$count',
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: textStyles.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: isSelected ? color : colors.onSurfaceMuted,
                   ),

@@ -230,7 +230,7 @@ class AppButton extends StatelessWidget {
     required double hPad,
     required bool isDisabled,
   }) {
-    const radius = BorderRadius.all(Radius.circular(4));
+    const radius = BorderRadius.all(Radius.circular(12));
     final padding = EdgeInsets.symmetric(horizontal: hPad);
 
     switch (variant) {
@@ -246,6 +246,8 @@ class AppButton extends StatelessWidget {
             shape: const RoundedRectangleBorder(borderRadius: radius),
             padding: padding,
             elevation: 0,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: child,
         );
@@ -263,6 +265,8 @@ class AppButton extends StatelessWidget {
             ),
             shape: const RoundedRectangleBorder(borderRadius: radius),
             padding: padding,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: child,
         );
@@ -274,6 +278,8 @@ class AppButton extends StatelessWidget {
             foregroundColor: colors.primary,
             shape: const RoundedRectangleBorder(borderRadius: radius),
             padding: padding,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: child,
         );
@@ -290,6 +296,8 @@ class AppButton extends StatelessWidget {
             shape: const RoundedRectangleBorder(borderRadius: radius),
             padding: padding,
             elevation: 0,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: child,
         );

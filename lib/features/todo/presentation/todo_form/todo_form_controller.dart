@@ -21,7 +21,23 @@ class TodoFormController extends BaseController<TodoFormState> {
   void updateDescription(String description) =>
       updateData(state.data.copyWith(description: description));
 
-  TodoEntity buildEntity() {
+  /// Mark the form as submitted so validation errors start showing.
+  void markSubmitted() {
+    if (!state.data.hasSubmitted) {
+      updateData(state.data.copyWith(hasSubmitted: true));
+    }
+  }
+
+  /// Returns null if validation fails (after marking form as submitted).
+  TodoEntity? validateAndBuild() {
+    markSubmitted();
+
+    if (!state.data.isValid) return null;
+
+    return _buildEntity();
+  }
+
+  TodoEntity _buildEntity() {
     final data = state.data;
     final now = DateTime.now();
 

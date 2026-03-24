@@ -1,3 +1,4 @@
+import 'package:flutter_clean_architecture/core/error/failures.dart';
 import 'package:flutter_clean_architecture/features/todo/data/datasources/todo_local_datasource.dart';
 import 'package:flutter_clean_architecture/features/todo/data/datasources/todo_remote_datasource.dart';
 import 'package:flutter_clean_architecture/features/todo/data/models/todo_model.dart';
@@ -20,37 +21,65 @@ class TodoRepositoryImpl implements TodoRepository {
       await _local.saveAll(models);
       return models.map((m) => m.toEntity()).toList();
     } catch (_) {
-      final cached = await _local.getAll();
-      return cached.map((m) => m.toEntity()).toList();
+      try {
+        final cached = await _local.getAll();
+        return cached.map((m) => m.toEntity()).toList();
+      } catch (e) {
+        throw CacheFailure(message: 'Failed to load todos: $e');
+      }
     }
   }
 
   @override
   Future<TodoEntity> getTodoById(String id) async {
+    if (id.isEmpty) throw NotFoundFailure(message: 'Invalid todo ID');
+
     try {
       final model = await _remote.getTodoById(id);
       await _local.save(model);
       return model.toEntity();
     } catch (_) {
-      final cached = await _local.getById(id);
-      if (cached != null) return cached.toEntity();
-      throw Exception('Todo not found');
+      try {
+        final cached = await _local.getById(id);
+        if (cached != null) return cached.toEntity();
+        throw NotFoundFailure(message: 'Todo not found');
+      } catch (e) {
+        if (e is Failure) rethrow;
+        throw CacheFailure(message: 'Failed to load todo: $e');
+      }
     }
   }
 
   @override
   Future<TodoEntity> createTodo({required String title, required String description}) async {
+    // Validate at repository level
+    final trimmedTitle = title.trim();
+    if (trimmedTitle.isEmpty) {
+      throw UnknownFailure(message: 'Title cannot be empty');
+    }
+    if (trimmedTitle.length < 2) {
+      throw UnknownFailure(message: 'Title must be at least 2 characters');
+    }
+
     final localModel = TodoModel(
       id: const Uuid().v4(),
-      title: title,
-      description: description,
+      title: trimmedTitle,
+      description: description.trim(),
       isCompleted: false,
       createdAt: DateTime.now().toIso8601String(),
     );
-    await _local.save(localModel);
 
     try {
-      final model = await _remote.createTodo({'title': title, 'description': description});
+      await _local.save(localModel);
+    } catch (e) {
+      throw CacheFailure(message: 'Failed to save todo locally: $e');
+    }
+
+    try {
+      final model = await _remote.createTodo({
+        'title': trimmedTitle,
+        'description': description.trim(),
+      });
       await _local.save(model);
       return model.toEntity();
     } catch (_) {
@@ -60,8 +89,19 @@ class TodoRepositoryImpl implements TodoRepository {
 
   @override
   Future<TodoEntity> updateTodo(TodoEntity todo) async {
+    // Validate
+    if (todo.id.isEmpty) throw NotFoundFailure(message: 'Invalid todo ID');
+    if (todo.title.trim().isEmpty) {
+      throw UnknownFailure(message: 'Title cannot be empty');
+    }
+
     final model = TodoModel.fromEntity(todo);
-    await _local.save(model);
+
+    try {
+      await _local.save(model);
+    } catch (e) {
+      throw CacheFailure(message: 'Failed to update todo locally: $e');
+    }
 
     try {
       final remote = await _remote.updateTodo(todo.id, model);
@@ -74,7 +114,13 @@ class TodoRepositoryImpl implements TodoRepository {
 
   @override
   Future<void> deleteTodo(String id) async {
-    await _local.delete(id);
+    if (id.isEmpty) throw NotFoundFailure(message: 'Invalid todo ID');
+
+    try {
+      await _local.delete(id);
+    } catch (e) {
+      throw CacheFailure(message: 'Failed to delete todo locally: $e');
+    }
 
     try {
       await _remote.deleteTodo(id);
@@ -85,8 +131,13 @@ class TodoRepositoryImpl implements TodoRepository {
 
   @override
   Future<void> deleteCompletedTodos() async {
-    final completed = await _local.getByStatus();
-    await _local.deleteAll(completed.map((t) => t.id).toList());
+    try {
+      final completed = await _local.getByStatus();
+      if (completed.isEmpty) return;
+      await _local.deleteAll(completed.map((t) => t.id).toList());
+    } catch (e) {
+      throw CacheFailure(message: 'Failed to clear completed todos: $e');
+    }
 
     try {
       await _remote.deleteCompletedTodos();
@@ -97,8 +148,10 @@ class TodoRepositoryImpl implements TodoRepository {
 
   @override
   Future<TodoEntity> toggleTodoCompletion(String id) async {
+    if (id.isEmpty) throw NotFoundFailure(message: 'Invalid todo ID');
+
     final cached = await _local.getById(id);
-    if (cached == null) throw Exception('Todo not found');
+    if (cached == null) throw NotFoundFailure(message: 'Todo not found');
 
     final toggled = TodoModel(
       id: cached.id,
@@ -108,7 +161,12 @@ class TodoRepositoryImpl implements TodoRepository {
       createdAt: cached.createdAt,
       updatedAt: DateTime.now().toIso8601String(),
     );
-    await _local.save(toggled);
+
+    try {
+      await _local.save(toggled);
+    } catch (e) {
+      throw CacheFailure(message: 'Failed to update todo status: $e');
+    }
 
     try {
       final remote = await _remote.toggleTodoCompletion(id);

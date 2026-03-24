@@ -1,16 +1,22 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_clean_architecture/core/base/base_page.dart';
 import 'package:flutter_clean_architecture/core/localization/locale_keys.dart';
 import 'package:flutter_clean_architecture/core/theme/colors.dart';
+import 'package:flutter_clean_architecture/core/theme/text_styles.dart';
 import 'package:flutter_clean_architecture/features/todo/domain/entities/todo_entity.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/todo_list/todo_list_controller.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/todo_list/todo_list_state.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/widgets/todo_filter_tabs.dart';
 import 'package:flutter_clean_architecture/features/todo/presentation/widgets/todo_item_tile.dart';
 import 'package:flutter_clean_architecture/routes/app_router.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_dialog.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_text_field.dart';
 
 @RoutePage()
 class TodoListPage extends BasePage<TodoListController, TodoListState> {
@@ -18,8 +24,84 @@ class TodoListPage extends BasePage<TodoListController, TodoListState> {
 
   @override
   Widget builder(BuildContext context, TodoListController controller, TodoListState data) {
+    return _TodoListView(controller: controller, data: data);
+  }
+}
+
+/// Extracted to StatefulWidget to manage StreamSubscription lifecycle.
+class _TodoListView extends StatefulWidget {
+  const _TodoListView({required this.controller, required this.data});
+
+  final TodoListController controller;
+  final TodoListState data;
+
+  @override
+  State<_TodoListView> createState() => _TodoListViewState();
+}
+
+class _TodoListViewState extends State<_TodoListView> {
+  StreamSubscription<TodoMessage>? _messageSubscription;
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _messageSubscription = widget.controller.messageStream.listen(_showMessage);
+  }
+
+  @override
+  void dispose() {
+    _messageSubscription?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showMessage(TodoMessage message) {
+    if (!mounted) return;
+    final colors = context.appColors;
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              message.isError ? Icons.error_outline : Icons.check_circle_outline,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message.text,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: message.isError ? colors.error : colors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        duration: Duration(seconds: message.isError ? 3 : 2),
+        action: message.isError
+            ? SnackBarAction(
+                label: 'Dismiss',
+                textColor: Colors.white,
+                onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+              )
+            : null,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = context.watch<TodoListController>().state.data;
+    final controller = widget.controller;
     final filtered = data.filteredTodos;
     final colors = context.appColors;
+    final textStyles = context.appTextStyles;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -57,9 +139,7 @@ class TodoListPage extends BasePage<TodoListController, TodoListState> {
                       children: [
                         Text(
                           LocaleKeys.todo_list_title.tr(),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
+                          style: textStyles.headlineSmall.copyWith(
                             color: colors.onBackground,
                             letterSpacing: -0.5,
                           ),
@@ -67,17 +147,28 @@ class TodoListPage extends BasePage<TodoListController, TodoListState> {
                         const SizedBox(height: 2),
                         Text(
                           _getSubtitle(data),
-                          style: TextStyle(fontSize: 13, color: colors.onSurfaceMuted),
+                          style: textStyles.bodySmall.copyWith(
+                            color: colors.onSurfaceMuted,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   if (data.completedCount > 0)
-                    _HeaderAction(
-                      icon: Icons.delete_sweep_outlined,
-                      tooltip: LocaleKeys.todo_list_clearCompleted.tr(),
-                      onTap: () => _confirmClearCompleted(context, controller, data),
-                      colors: colors,
+                    Tooltip(
+                      message: LocaleKeys.todo_list_clearCompleted.tr(),
+                      child: GestureDetector(
+                        onTap: () => _confirmClearCompleted(context, controller, data),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: colors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.delete_sweep_outlined, size: 20, color: colors.error),
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -85,40 +176,23 @@ class TodoListPage extends BasePage<TodoListController, TodoListState> {
 
             const SizedBox(height: 16),
 
-            // ── Search Bar ──
+            // ── Search Bar — AppTextField ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colors.grey200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.grey300.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  onChanged: controller.setSearchQuery,
-                  decoration: InputDecoration(
-                    hintText: LocaleKeys.todo_list_search.tr(),
-                    hintStyle: TextStyle(color: colors.onSurfaceMuted, fontSize: 14),
-                    prefixIcon: Icon(Icons.search_rounded, color: colors.onSurfaceMuted, size: 22),
-                    suffixIcon: data.searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.close_rounded, size: 18, color: colors.onSurfaceMuted),
-                            onPressed: () => controller.setSearchQuery(''),
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
+              child: AppTextField(
+                controller: _searchController,
+                hint: LocaleKeys.todo_list_search.tr(),
+                prefixIcon: Icons.search_rounded,
+                onChanged: controller.setSearchQuery,
+                suffixIcon: data.searchQuery.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          controller.setSearchQuery('');
+                        },
+                        child: Icon(Icons.close_rounded, size: 18, color: colors.onSurfaceMuted),
+                      )
+                    : null,
               ),
             ),
 
@@ -158,7 +232,7 @@ class TodoListPage extends BasePage<TodoListController, TodoListState> {
                         key: ValueKey(data.filter),
                         padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
                         itemCount: filtered.length,
-                                                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (_, i) => TodoItemTile(
                           todo: filtered[i],
                           onToggle: () => controller.toggleTodoCompletion(filtered[i].id),
@@ -191,31 +265,21 @@ class TodoListPage extends BasePage<TodoListController, TodoListState> {
     return '$remaining task${remaining > 1 ? 's' : ''} remaining';
   }
 
+  // AppDialog.confirm
   Future<void> _confirmClearCompleted(
     BuildContext context,
     TodoListController controller,
     TodoListState data,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear Completed'),
-        content: Text(
-          'Delete ${data.completedCount} completed todo${data.completedCount > 1 ? 's' : ''}?',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Delete All'),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Clear Completed',
+      message: 'Delete ${data.completedCount} completed todo${data.completedCount > 1 ? 's' : ''}?',
+      confirmLabel: 'Delete All',
+      cancelLabel: 'Cancel',
+      isDangerous: true,
     );
-    if (confirmed == true) {
+    if (confirmed) {
       await controller.deleteCompletedTodos();
     }
   }
@@ -256,6 +320,7 @@ class _ProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = total > 0 ? completed / total : 0.0;
     final percentage = (progress * 100).toInt();
+    final textStyles = context.appTextStyles;
 
     return Column(
       children: [
@@ -264,12 +329,11 @@ class _ProgressBar extends StatelessWidget {
           children: [
             Text(
               'Progress',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: colors.onSurfaceMuted),
+              style: textStyles.labelSmall.copyWith(color: colors.onSurfaceMuted),
             ),
             Text(
               '$percentage%',
-              style: TextStyle(
-                fontSize: 12,
+              style: textStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.w700,
                 color: progress == 1.0 ? colors.success : colors.primary,
               ),
@@ -283,7 +347,7 @@ class _ProgressBar extends StatelessWidget {
             tween: Tween(begin: 0, end: progress),
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
-                        builder: (_, value, _) => LinearProgressIndicator(
+            builder: (_, value, __) => LinearProgressIndicator(
               value: value,
               minHeight: 6,
               backgroundColor: colors.grey200,
@@ -294,41 +358,6 @@ class _ProgressBar extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Header Action ──
-
-class _HeaderAction extends StatelessWidget {
-  const _HeaderAction({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    required this.colors,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: colors.error.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 20, color: colors.error),
-        ),
-      ),
     );
   }
 }
@@ -348,6 +377,8 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
+
     final (icon, message, subtitle) = query.isNotEmpty
         ? (Icons.search_off_rounded, 'No results', LocaleKeys.todo_empty_search.tr(args: [query]))
         : switch (filter) {
@@ -386,8 +417,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 18,
+              style: textStyles.titleMedium.copyWith(
                 fontWeight: FontWeight.w700,
                 color: colors.onSurface,
               ),
@@ -396,7 +426,10 @@ class _EmptyState extends StatelessWidget {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: colors.onSurfaceMuted, height: 1.5),
+              style: textStyles.bodyMedium.copyWith(
+                color: colors.onSurfaceMuted,
+                height: 1.5,
+              ),
             ),
           ],
         ),

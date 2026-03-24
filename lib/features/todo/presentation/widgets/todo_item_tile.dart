@@ -2,7 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_clean_architecture/core/localization/locale_keys.dart';
 import 'package:flutter_clean_architecture/core/theme/colors.dart';
+import 'package:flutter_clean_architecture/core/theme/text_styles.dart';
 import 'package:flutter_clean_architecture/features/todo/domain/entities/todo_entity.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_dialog.dart';
+import 'package:flutter_clean_architecture/shared/components/atoms/app_status_tag.dart';
 
 class TodoItemTile extends StatelessWidget {
   const TodoItemTile({
@@ -21,6 +24,7 @@ class TodoItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final textStyles = context.appTextStyles;
     final isDone = todo.isCompleted;
     final timeAgo = _formatTimeAgo(todo.createdAt);
 
@@ -46,7 +50,7 @@ class TodoItemTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDone ? colors.success.withValues(alpha: 0.3) : colors.grey200,
-            width: 1,
+            width: 0.8,
           ),
           boxShadow: [
             BoxShadow(
@@ -65,7 +69,7 @@ class TodoItemTile extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // ── Checkbox ──
+                  // ── Animated Checkbox ──
                   _AnimatedCheckbox(
                     isChecked: isDone,
                     onToggle: onToggle,
@@ -81,10 +85,10 @@ class TodoItemTile extends StatelessWidget {
                       children: [
                         AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 250),
-                          style: TextStyle(
+                          style: textStyles.titleSmall.copyWith(
                             fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                            decoration:
+                                isDone ? TextDecoration.lineThrough : TextDecoration.none,
                             color: isDone ? colors.onSurfaceMuted : colors.onSurface,
                             decorationColor: colors.onSurfaceMuted,
                           ),
@@ -96,7 +100,7 @@ class TodoItemTile extends StatelessWidget {
                             todo.description,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13, color: colors.onSurfaceMuted),
+                            style: textStyles.bodySmall.copyWith(color: colors.onSurfaceMuted),
                           ),
                         ],
                         const SizedBox(height: 6),
@@ -106,24 +110,15 @@ class TodoItemTile extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               timeAgo,
-                              style: TextStyle(fontSize: 11, color: colors.grey500),
+                              style: textStyles.labelSmall.copyWith(color: colors.grey500),
                             ),
                             if (isDone) ...[
                               const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: colors.success.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  LocaleKeys.todo_status_completed.tr(),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.success,
-                                  ),
-                                ),
+                              // AppStatusTag
+                              AppStatusTag(
+                                label: LocaleKeys.todo_status_completed.tr(),
+                                type: AppStatusTagType.success,
+                                icon: Icons.check_rounded,
                               ),
                             ],
                           ],
@@ -143,7 +138,10 @@ class TodoItemTile extends StatelessWidget {
                       }
                     },
                     itemBuilder: (_) => [
-                      const PopupMenuItem(value: 'edit', child: _PopupItem(Icons.edit_outlined, 'Edit')),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: _PopupItem(Icons.edit_outlined, 'Edit'),
+                      ),
                       PopupMenuItem(
                         value: 'delete',
                         child: _PopupItem(Icons.delete_outline, 'Delete', color: colors.error),
@@ -162,26 +160,19 @@ class TodoItemTile extends StatelessWidget {
     );
   }
 
+  // AppDialog.confirm
   Future<bool> _confirmDelete(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Todo'),
-        content: Text('Are you sure you want to delete "${todo.title}"?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    return AppDialog.confirm(
+      context,
+      title: 'Delete Todo',
+      message: 'Are you sure you want to delete "${todo.title}"?',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDangerous: true,
     );
-    return result ?? false;
   }
 
-  void _confirmAndDelete(BuildContext context) async {
+  Future<void> _confirmAndDelete(BuildContext context) async {
     final confirmed = await _confirmDelete(context);
     if (confirmed) onDelete();
   }

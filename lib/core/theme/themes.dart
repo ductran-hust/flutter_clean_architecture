@@ -12,8 +12,8 @@ import 'package:flutter_clean_architecture/core/theme/text_styles.dart';
 ///   button h.   : 48 dp
 abstract final class AppTheme {
   // ── Shared radii / sizes ──────────────────────────────────────────────────
-  static const double _buttonRadius = 4.0;
-  static const double _inputRadius = 4.0;
+  static const double _buttonRadius = 12.0;
+  static const double _inputRadius = 12.0;
   static const double _cardRadius = 12.0;
   static const double _buttonHeight = 48.0;
 
