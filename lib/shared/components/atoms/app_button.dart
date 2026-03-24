@@ -181,9 +181,9 @@ class AppButton extends StatelessWidget {
       AppButtonVariant.filled => Colors.white,
       AppButtonVariant.danger => Colors.white,
       AppButtonVariant.outlined =>
-      isDisabled ? colors.primary.withOpacity(0.4) : colors.primary,
+      isDisabled ? colors.primary.withValues(alpha: 0.4) : colors.primary,
       AppButtonVariant.ghost =>
-      isDisabled ? colors.primary.withOpacity(0.4) : colors.primary,
+      isDisabled ? colors.primary.withValues(alpha: 0.4) : colors.primary,
     };
 
     final textWidget = Text(
@@ -239,10 +239,10 @@ class AppButton extends StatelessWidget {
           onPressed: isDisabled ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: isDisabled
-                ? colors.primary.withOpacity(0.5)
+                ? colors.primary.withValues(alpha: 0.5)
                 : colors.primary,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: colors.primary.withOpacity(0.5),
+            disabledBackgroundColor: colors.primary.withValues(alpha: 0.5),
             shape: const RoundedRectangleBorder(borderRadius: radius),
             padding: padding,
             elevation: 0,
@@ -259,7 +259,7 @@ class AppButton extends StatelessWidget {
             foregroundColor: colors.primary,
             side: BorderSide(
               color: isDisabled
-                  ? colors.primary.withOpacity(0.3)
+                  ? colors.primary.withValues(alpha: 0.3)
                   : colors.primary,
               width: 1.5,
             ),
@@ -289,10 +289,10 @@ class AppButton extends StatelessWidget {
           onPressed: isDisabled ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: isDisabled
-                ? colors.error.withOpacity(0.5)
+                ? colors.error.withValues(alpha: 0.5)
                 : colors.error,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: colors.error.withOpacity(0.5),
+            disabledBackgroundColor: colors.error.withValues(alpha: 0.5),
             shape: const RoundedRectangleBorder(borderRadius: radius),
             padding: padding,
             elevation: 0,
